@@ -1,28 +1,55 @@
 # 安装与升级
 
-## 1. 获取代码
-
-```bash
-git clone <repository-url> myreels-studio
-```
-
-建议保持固定目录，例如：
+## 1. 仓库地址
 
 ```text
-~/plugins/myreels-studio
+https://github.com/myreelsai/myreels-studio
 ```
+
+仓库如果为 Public，可以直接匿名克隆；如果是 Private，需要先配置 GitHub 登录、PAT 或 SSH。
 
 不要提交或拷贝本机凭据文件：`auth.json`、`.secret.json`、`.env`。
 
 ## 2. 安装到当前 DSH profile
 
-最省事的做法是把路径发给 agent，在会话里直接说：
+### 方式一：DSH 网络安装
+
+在「插件管理 → 添加插件」中填写：
+
+```text
+https://github.com/myreelsai/myreels-studio
+```
+
+或：
+
+```text
+plugin_manager
+  action = install_bundle
+  target = https://github.com/myreelsai/myreels-studio
+```
+
+如果提示 `connection to github.com timed out`，说明网络到 GitHub 不稳定，改用本地安装。
+
+### 方式二：克隆后本地安装
+
+```bash
+git clone https://github.com/myreelsai/myreels-studio.git
+cd myreels-studio
+```
+
+建议保持固定目录，例如：
+
+```text
+D:\plugins\myreels-studio
+```
+
+然后把路径发给 agent，在会话里说：
 
 ```text
 把 D:\plugins\myreels-studio 这个目录安装成 DSH 插件
 ```
 
-（换成你自己 clone 的位置，用本机绝对路径。）或者自己在会话中调用：
+或者：
 
 ```text
 plugin_manager
@@ -30,7 +57,7 @@ plugin_manager
   target = <本地 myreels-studio 目录>
 ```
 
-如果已经安装过旧版本：
+如果已经安装过旧版本，先卸载：
 
 ```text
 plugin_manager
@@ -38,12 +65,20 @@ plugin_manager
   target = @local/myreels-studio
 ```
 
-再执行一次安装。
+再安装新版本。
+
+如果出现：
+
+```text
+ERR_PNPM_EPERM rename ... node_modules\@local\myreels-studio
+```
+
+这是旧插件仍被 DSH 占用，不是 GitHub 权限问题。卸载旧版并重启 DSH 后重新安装。
 
 ## 3. 生效
 
 安装后刷新 DSH 页面。  
-代码更新后：只改了 `lib/` 或 `client.js`，`git pull` 后重启 DSH 即可；改了 `package.json` 的依赖，才需要重新执行 `remove_bundle` + `install_bundle`。
+代码更新后：只改了 `lib/` 或 `client.js`，`git pull` 后重启 DSH；改了 `package.json` 的依赖，才需要重新执行 `remove_bundle` + `install_bundle`。
 
 ## 4. 验证
 
@@ -66,7 +101,7 @@ cd myreels-studio
 git pull
 ```
 
-然后重新安装或重启 DSH。
+然后重启 DSH；依赖有变化时重新安装。
 
 ## 6. 环境
 

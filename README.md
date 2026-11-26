@@ -12,32 +12,92 @@ MyReels Studio 是一个用于 DeepSeek Harness 的短剧制作插件。它把�
 
 ## 安装
 
-推荐从仓库克隆后安装：
+最新仓库地址：
 
-```bash
-git clone <repository-url> myreels-studio
+```text
+https://github.com/myreelsai/myreels-studio
 ```
 
-然后在 DSH 会话里安装，两种方式任选：
+### 方式一：DSH 网络安装
 
-**方式一（推荐）**：把路径告诉 DSH，让它自己装。新开一个会话，直接说：
+适用于当前账号能访问该 GitHub 仓库，或仓库已设为 Public 的情况。
 
-> 把 `D:\plugins\myreels-studio` 这个目录安装成 DSH 插件
+在 DSH 的「插件管理 → 添加插件」中填写完整 GitHub 地址：
 
-（把路径换成你自己 clone 的位置，用本机绝对路径。）agent 会调用 `plugin_manager` 完成安装，你不用记工具名和参数。
+```text
+https://github.com/myreelsai/myreels-studio
+```
 
-**方式二**：自己在会话里执行：
+或在会话里执行：
+
+```text
+plugin_manager install_bundle target = https://github.com/myreelsai/myreels-studio
+```
+
+注意不要只填：
+
+```text
+myreels-studio
+```
+
+这是仓库名，不是已发布的 npm 包名；DSH 按包名搜索时会找不到。
+
+如果 DSH 提示：
+
+```text
+connection to github.com timed out
+```
+
+说明当前网络到 GitHub 不稳定，改用下面的本地安装方式。
+
+### 方式二：克隆后安装
+
+```bash
+git clone https://github.com/myreelsai/myreels-studio.git
+cd myreels-studio
+```
+
+然后在 DSH 会话里执行：
 
 ```text
 plugin_manager install_bundle target = <本地 myreels-studio 目录>
 ```
 
-安装后刷新 DSH 页面，左侧栏顶部的面板列表会出现 **MyReels Studio**（胶片图标）。
+例如：
 
-更新已安装的插件：
+```text
+plugin_manager install_bundle target = D:\plugins\myreels-studio
+```
 
-- 只改了工具逻辑（`lib/`）或界面（`client.js`）：`git pull` 后重启 DSH 即可，代码已经是新的
-- 改了 `package.json` 的依赖：需要重装一次，让 pnpm 重新安装依赖
+私有仓库需要先配置 GitHub 登录、PAT 或 SSH，确保 `git clone` 能成功。
+
+### 已安装旧版本
+
+先卸载旧版，再安装 GitHub 版本：
+
+```text
+plugin_manager remove_bundle target = @local/myreels-studio
+```
+
+如果安装时报：
+
+```text
+ERR_PNPM_EPERM rename ... node_modules\@local\myreels-studio
+```
+
+这是旧插件仍被 DSH 占用，不是 GitHub 权限问题。先卸载旧插件并重启 DSH，再重新安装。
+
+安装后刷新 DSH 页面，左侧栏顶部会出现 **MyReels Studio**（胶片图标）。
+
+### 更新
+
+```bash
+cd myreels-studio
+git pull
+```
+
+- 只改 `lib/` 或 `client.js`：更新后重启 DSH
+- 改了 `package.json` 依赖：重新卸载并安装
 
 ```text
 plugin_manager remove_bundle target = @local/myreels-studio
