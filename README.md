@@ -20,7 +20,7 @@ https://github.com/myreelsai/myreels-studio
 
 ### 方式一：DSH 网络安装
 
-适用于当前账号能访问该 GitHub 仓库，或仓库已设为 Public 的情况。
+仓库已公开，可以直接使用 GitHub 地址安装。
 
 在 DSH 的「插件管理 → 添加插件」中填写完整 GitHub 地址：
 
@@ -69,7 +69,7 @@ plugin_manager install_bundle target = <本地 myreels-studio 目录>
 plugin_manager install_bundle target = D:\plugins\myreels-studio
 ```
 
-私有仓库需要先配置 GitHub 登录、PAT 或 SSH，确保 `git clone` 能成功。
+仓库已公开，可以直接 clone，不需要 GitHub 登录或 token。
 
 ### 已安装旧版本
 

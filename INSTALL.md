@@ -6,7 +6,7 @@
 https://github.com/myreelsai/myreels-studio
 ```
 
-仓库如果为 Public，可以直接匿名克隆；如果是 Private，需要先配置 GitHub 登录、PAT 或 SSH。
+仓库已公开，可以直接匿名克隆，不需要 GitHub 登录、PAT 或 SSH。
 
 不要提交或拷贝本机凭据文件：`auth.json`、`.secret.json`、`.env`。
 
