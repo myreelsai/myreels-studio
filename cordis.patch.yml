@@ -1,0 +1,8 @@
+# MyReels Studio host bundle. Secrets are read from env/settings (see README).
+- insert:
+    - id: myreels-studio
+      name: "@local/myreels-studio"
+      config:
+        baseUrl: https://api.myreels.tv
+        webBaseUrl: https://myreels.tv
+        publicApiKey: ""

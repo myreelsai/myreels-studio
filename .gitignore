@@ -1,0 +1,10 @@
+node_modules/
+.secret.json
+.env
+*.log
+.playwright-cli/
+dist/
+output/
+coverage/
+.DS_Store
+Thumbs.db

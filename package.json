@@ -1,0 +1,70 @@
+{
+  "name": "@local/myreels-studio",
+  "version": "0.1.0",
+  "description": "MyReels Studio: short-drama production plugin",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/",
+    "icon.svg",
+    "README.md",
+    "INSTALL.md"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "myreels",
+    "story",
+    "video"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/decisions.test.mjs tests/prompt.test.mjs tests/state.test.mjs tests/payload.test.mjs tests/http.test.mjs tests/subtitle.test.mjs tests/media.test.mjs tests/refs.test.mjs tests/assetqc.test.mjs tests/layout.test.mjs tests/portfolio.test.mjs tests/preflight.test.mjs tests/rules.test.mjs tests/models.test.mjs tests/script.test.mjs tests/script-format.test.mjs tests/contract.test.mjs tests/split.test.mjs tests/fidelity.test.mjs tests/templates.test.mjs tests/template-choice.test.mjs tests/templates-scope.test.mjs tests/analysis.test.mjs tests/owner.test.mjs tests/video-model.test.mjs tests/image-model.test.mjs tests/asset-audit.test.mjs tests/subject-image.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-settings": "^0.1.7-rc.1 || ^0.2.0-rc.1",
+    "@deepseek-ai/dsh-tools": "^0.1.7-rc.1 || ^0.2.0-rc.1",
+    "@deepseek-ai/schemastery": ">=3.18.4 <4"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-settings": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "cordis.patch.yml"
+    },
+    "engines": {
+      "dsh": ">=0.2.1-rc.2 <0.4.0-0"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}
