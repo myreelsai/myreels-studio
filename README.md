@@ -34,6 +34,12 @@ https://github.com/myreelsai/myreels-studio
 plugin_manager install_bundle target = https://github.com/myreelsai/myreels-studio
 ```
 
+也可以直接对 agent 说：
+
+> 从 `https://github.com/myreelsai/myreels-studio` 安装 MyReels Studio 插件
+
+agent 会自己调用 `plugin_manager`，不需要你记工具参数。
+
 注意不要只填：
 
 ```text
@@ -57,13 +63,13 @@ git clone https://github.com/myreelsai/myreels-studio.git
 cd myreels-studio
 ```
 
-然后在 DSH 会话里执行：
+克隆后可以直接在 DSH 会话里对 agent 说：
 
-```text
-plugin_manager install_bundle target = <本地 myreels-studio 目录>
-```
+> 把 `D:\plugins\myreels-studio` 这个目录安装成 DSH 插件
 
-例如：
+（把路径换成你自己的 clone 位置，用本机绝对路径。）agent 会自动调用 `plugin_manager` 完成安装，你不用记工具名和参数。
+
+也可以自己执行：
 
 ```text
 plugin_manager install_bundle target = D:\plugins\myreels-studio
@@ -124,6 +130,59 @@ plugin_manager install_bundle target = <本地 myreels-studio 目录>
 3. **把剧本交给 agent**：在会话里说「用 MyReels Studio 把这份剧本做成短剧，共 3 集」，并把剧本贴进来或给出文件路径。agent 会创建项目，面板里随即出现对应的分组和 run。
 4. **统一做项目设置**：在剧名那一行右侧点「项目设置」，选画风、画幅、预算等并保存。这一步不要靠对话逐项确认，保存后 agent 才能提交分析。
 5. **往下推进**：剧本分析 → 资产图 → 分镜视频 → 整集成片，每一步都在会话里让 agent 继续；面板同步显示当前阶段与进度。
+
+### 接入已有故事台项目
+
+如果项目已经在 MyReels WebUI 故事台里，不需要重新建项目和重新分析，直接接入即可。
+
+**第一步：列出可接入项目**
+
+在 DSH 会话里说：
+
+> 列出我的 MyReels 故事项目
+
+agent 会调用：
+
+```text
+myreels_project_open list=true
+```
+
+返回的是当前 MyReels 账号下、后端仍可访问的故事项目。只在 WebUI 存在、还没接入插件的项目，会出现在这个列表里，但不会直接出现在左侧任务列表。
+
+**第二步：接入某一集**
+
+在会话里说，例如：
+
+> 把《一品布衣》第 4 集接入 MyReels Studio
+
+agent 会调用：
+
+```text
+myreels_project_open projectTitle="一品布衣" episodeNo=4
+```
+
+也可以直接用 `projectId`：
+
+```text
+myreels_project_open projectId=908fb547-cbc2-4302-9016-c23bc617a34c episodeNo=4
+```
+
+接入后会返回一个 `runId`，并且：
+
+- 左侧任务列表出现该剧和对应集
+- 不会复制或重建 WebUI 项目
+- 同一项目、同一集默认复用已有 run，不会重复创建
+- 之后可以正常使用 `myreels_snapshot`、`myreels_preflight`、`myreels_asset_audit`、`myreels_run_advance`、`myreels_render` 等工具
+
+**第三步：检查并继续**
+
+建议先看当前状态：
+
+```text
+myreels_snapshot runId=<接入返回的 runId>
+```
+
+然后从任务列表打开「项目设置」，确认画风、画幅、预算和模板已保存，再让 agent 继续分析或生成。
 
 面板是只读视图（只有删除本机文件、退出登录、自主优化开关会写数据），所有生成操作都在会话里交给 agent 执行。
 
