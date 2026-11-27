@@ -41,8 +41,9 @@ window.__ModuleLoader__.load({
         const [autonomyOpen, setAutonomyOpen] = useState(false);
         const [projectSettingsId, setProjectSettingsId] = useState('');
         const [assetPreviewId, setAssetPreviewId] = useState('');
-        const [previewReloadKey, setPreviewReloadKey] = useState(0);
+        const [previewSrc, setPreviewSrc] = useState('');
         const [previewRefreshing, setPreviewRefreshing] = useState(false);
+        const [previewError, setPreviewError] = useState('');
         const [loggingOut, setLoggingOut] = useState(false);
         const [authOpen, setAuthOpen] = useState(false);
         const [authReady, setAuthReady] = useState(false);
@@ -53,6 +54,7 @@ window.__ModuleLoader__.load({
         const [navigating, setNavigating] = useState(false);
         const [expandedProjectId, setExpandedProjectId] = useState('');
         const detailSeq = useRef(0);
+        const pointsRetryRef = useRef(0);
         const expandedInit = useRef(false);
         const projectSettingsFrame = useRef(null);
         useEffect(() => {
@@ -68,8 +70,52 @@ window.__ModuleLoader__.load({
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
               return res.json();
             })
-            .then((json) => setData({ loading: false, error: '', runs: Array.isArray(json?.runs) ? json.runs : [], projects: Array.isArray(json?.projects) ? json.projects : [], auth: json?.auth || null, profile: json?.profile || null, pointsBalance: Number.isFinite(Number(json?.pointsBalance)) ? Number(json.pointsBalance) : null, webBaseUrl: String(json?.webBaseUrl || ''), autonomy: json?.autonomy || null }))
-            .catch((err) => setData((prev) => ({ ...prev, loading: false, error: String(err?.message || err), runs: [], projects: [], auth: null, profile: null, pointsBalance: null, autonomy: null })));
+            .then((json) => {
+              const nextPoints = Number.isFinite(Number(json?.pointsBalance))
+                ? Number(json.pointsBalance)
+                : null;
+              const shouldRetryPoints = Boolean(json?.auth && !json.auth.loggedOut)
+                && (nextPoints === null || nextPoints === 0);
+              if (!shouldRetryPoints) pointsRetryRef.current = 0;
+              setData((prev) => {
+                const keepPrevious = shouldRetryPoints
+                  && pointsRetryRef.current < 2
+                  && Number.isFinite(prev.pointsBalance)
+                  && prev.pointsBalance > 0;
+                return {
+                  loading: false,
+                  error: '',
+                  runs: Array.isArray(json?.runs) ? json.runs : [],
+                  projects: Array.isArray(json?.projects) ? json.projects : [],
+                  auth: json?.auth || null,
+                  profile: json?.profile || null,
+                  pointsBalance: keepPrevious ? prev.pointsBalance : (nextPoints ?? prev.pointsBalance),
+                  webBaseUrl: String(json?.webBaseUrl || ''),
+                  autonomy: json?.autonomy || null,
+                };
+              });
+              if (shouldRetryPoints && pointsRetryRef.current < 2) {
+                pointsRetryRef.current += 1;
+                setTimeout(load, 1200);
+              }
+            })
+            .catch((err) => setData((prev) => ({ ...prev, loading: false, error: String(err?.message || err), runs: [], projects: [], auth: null, profile: null, autonomy: null })));
+        };
+        const refreshAssetPreview = async () => {
+          if (!assetPreviewId || previewRefreshing) return;
+          setPreviewRefreshing(true);
+          setPreviewError('');
+          try {
+            const url = `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(assetPreviewId)}&embed=1&generate=1&_=${Date.now()}`;
+            const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const finalUrl = new URL(res.url || url, window.location.href);
+            setPreviewSrc(`${finalUrl.pathname}${finalUrl.search}`);
+          } catch (error) {
+            setPreviewError(String(error?.message || error));
+          } finally {
+            setPreviewRefreshing(false);
+          }
         };
         const openRun = (runId) => {
           const seq = ++detailSeq.current;
@@ -367,7 +413,7 @@ window.__ModuleLoader__.load({
                 isCurrentProject ? h('span', { style: styles.currentBadge }, t('currentProject')) : null,
                 h('span', { style: styles.groupMeta }, group.episodeCount > group.runs.length ? `${group.runs.length}/${group.episodeCount} 集` : `${group.runs.length} 集`),
                 h('span', { style: { flex: 1 } }),
-                group.projectId ? h('button', { type: 'button', style: { ...styles.projectLinkButton, marginRight: '10px' }, onClick: (event) => { event.stopPropagation(); setPreviewReloadKey(0); setPreviewRefreshing(false); setAssetPreviewId(group.projectId); } }, t('previewAssets')) : null,
+                group.projectId ? h('button', { type: 'button', style: { ...styles.projectLinkButton, marginRight: '10px' }, onClick: (event) => { event.stopPropagation(); setPreviewSrc(''); setPreviewError(''); setPreviewRefreshing(false); setAssetPreviewId(group.projectId); } }, t('previewAssets')) : null,
                 group.projectId ? h('button', { type: 'button', style: styles.projectLinkButton, onClick: (event) => { event.stopPropagation(); setProjectSettingsId(group.projectId); } }, t('projectSettings')) : null,
               );
               const rows = group.runs.map((run) => {
@@ -478,28 +524,47 @@ window.__ModuleLoader__.load({
                         type: 'button',
                         style: styles.button,
                         disabled: previewRefreshing,
-                        onClick: () => {
-                          setPreviewRefreshing(true);
-                          setPreviewReloadKey(Date.now());
-                        },
+                        onClick: refreshAssetPreview,
                       }, previewRefreshing ? t('refreshing') : t('refreshPreview')),
                   h('button', {
                     type: 'button',
                     style: styles.button,
-                    onClick: () => { setProjectSettingsId(''); setAssetPreviewId(''); setPreviewReloadKey(0); setPreviewRefreshing(false); },
+                    onClick: () => { setProjectSettingsId(''); setAssetPreviewId(''); setPreviewSrc(''); setPreviewError(''); setPreviewRefreshing(false); },
                   }, t('close')),
                 ),
               ),
-              h('iframe', {
-                key: embedKind === 'settings' ? 'project-settings' : `asset-preview-${previewReloadKey}`,
-                ref: embedKind === 'settings' ? projectSettingsFrame : null,
-                title: embedKind === 'settings' ? t('projectSettings') : t('previewAssets'),
-                src: embedKind === 'settings'
-                  ? `/plugins/myreels-studio/project-settings?projectId=${encodeURIComponent(embedProjectId)}&embed=1`
-                  : `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(embedProjectId)}&embed=1${previewReloadKey ? `&generate=1&_=${previewReloadKey}` : ''}`,
-                onLoad: embedKind === 'preview' ? () => setPreviewRefreshing(false) : undefined,
-                style: styles.projectEmbedFrame,
-              }),
+              h('div', { style: { position: 'relative' } },
+                h('iframe', {
+                  ref: embedKind === 'settings' ? projectSettingsFrame : null,
+                  title: embedKind === 'settings' ? t('projectSettings') : t('previewAssets'),
+                  src: embedKind === 'settings'
+                    ? `/plugins/myreels-studio/project-settings?projectId=${encodeURIComponent(embedProjectId)}&embed=1`
+                    : (previewSrc || `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(embedProjectId)}&embed=1`),
+                  style: styles.projectEmbedFrame,
+                }),
+                embedKind === 'preview' && (previewRefreshing || previewError)
+                  ? h('div', {
+                      style: {
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        background: 'rgba(247,248,250,.9)',
+                        zIndex: 10,
+                        fontSize: '13px',
+                        color: previewError ? '#b91c1c' : 'var(--dsw-alias-label-primary)',
+                        padding: '24px',
+                        textAlign: 'center',
+                      },
+                    },
+                      previewRefreshing ? h('div', { style: styles.loadingSpinner }) : null,
+                      h('div', null, previewError || t('refreshing')),
+                    )
+                  : null,
+              ),
             )
           : null;
 
