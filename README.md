@@ -151,6 +151,17 @@ myreels_project_open list=true
 
 **第二步：接入某一集**
 
+注意：`project_open` 一次只接入**一集**，不会自动把整部剧的所有集都接进来。
+
+不传 `episodeNo` 时，当前实现会自动选：
+
+```text
+最后一条已完成分析的集
+→ 如果没有已完成分析的集，则选最后一集
+```
+
+不是自动接入全部集。
+
 在会话里说，例如：
 
 > 把《一品布衣》第 4 集接入 MyReels Studio
@@ -174,7 +185,26 @@ myreels_project_open projectId=908fb547-cbc2-4302-9016-c23bc617a34c episodeNo=4
 - 同一项目、同一集默认复用已有 run，不会重复创建
 - 之后可以正常使用 `myreels_snapshot`、`myreels_preflight`、`myreels_asset_audit`、`myreels_run_advance`、`myreels_render` 等工具
 
-**第三步：检查并继续**
+**第三步：接入全部集**
+
+如果要接入整部剧，需要明确告诉 agent：
+
+> 把《一品布衣》第 1 集到第 4 集全部接入 MyReels Studio
+
+`project_open` 没有“整部剧一键接入”参数，agent 需要按集逐个调用：
+
+```text
+myreels_project_open projectTitle="一品布衣" episodeNo=1
+myreels_project_open projectTitle="一品布衣" episodeNo=2
+myreels_project_open projectTitle="一品布衣" episodeNo=3
+myreels_project_open projectTitle="一品布衣" episodeNo=4
+```
+
+集号以上一步 `project_open list=true` 返回的 `EPx` 列表为准，不要假设一定从 1 开始或连续。
+
+只对 agent 说“接入《一品布衣》”时，只会接入一集，不会自动接入全剧。
+
+**第四步：检查并继续**
 
 建议先看当前状态：
 
