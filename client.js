@@ -578,7 +578,7 @@ window.__ModuleLoader__.load({
           : null;
 
         const autonomyPanel = autonomyOpen && data.autonomy
-          ? h('div', { style: styles.autonomyPanel },
+          ? h('div', { style: embeddedPanel ? { ...styles.autonomyPanel, ...styles.autonomyOverlay } : styles.autonomyPanel },
               h('div', { style: styles.autonomyHead },
                 h('div', null,
                   h('div', { style: styles.detailTitle }, t('autonomyTitle')),
@@ -662,13 +662,24 @@ window.__ModuleLoader__.load({
             )
           : null;
 
+        const autonomyLayer = autonomyPanel
+          ? embeddedPanel
+            ? h('div', {
+                style: styles.autonomyBackdrop,
+                onClick: (event) => {
+                  if (event.target === event.currentTarget) setAutonomyOpen(false);
+                },
+              }, autonomyPanel)
+            : autonomyPanel
+          : null;
+
         return h('div', { style: styles.page },
           navigating ? h('div', { style: styles.loadingOverlay },
             h('style', null, '@keyframes myreels-spin{to{transform:rotate(360deg)}}'),
             h('div', { style: styles.loadingSpinner }),
             h('div', null, t('loadingProject')),
           ) : null,
-          authPanel, header, embeddedPanel ? null : autonomyPanel, embeddedPanel || body, embeddedPanel ? null : detailCard);
+          authPanel, header, autonomyLayer, embeddedPanel || body, embeddedPanel ? null : detailCard);
       };
     }
 
@@ -845,7 +856,9 @@ window.__ModuleLoader__.load({
           buttonActive: { background: 'var(--dsw-alias-brand-primary)', borderColor: 'var(--dsw-alias-brand-primary)', color: '#fff' },
           settings: { marginBottom: '18px', padding: '16px', border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '12px', background: 'var(--dsw-alias-bg-layer-1)' },
           settingsHead: { marginBottom: '12px' },
-          autonomyPanel: { marginBottom: '18px', padding: '16px', border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '12px', background: 'var(--dsw-alias-bg-layer-1)' },
+          autonomyBackdrop: { position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(15,23,42,.28)', padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' },
+        autonomyOverlay: { position: 'relative', width: 'min(560px, 100%)', maxHeight: 'calc(100vh - 48px)', overflow: 'auto', marginBottom: 0, boxShadow: '0 24px 60px rgba(0,0,0,.28)' },
+        autonomyPanel: { marginBottom: '18px', padding: '16px', border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '12px', background: 'var(--dsw-alias-bg-layer-1)' },
           autonomyHead: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '12px' },
           autonomyHint: { marginTop: '4px', fontSize: '12px', color: 'var(--dsw-alias-label-secondary)', lineHeight: 1.5 },
           autonomyList: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' },
