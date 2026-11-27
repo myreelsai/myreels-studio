@@ -42,6 +42,7 @@ window.__ModuleLoader__.load({
         const [projectSettingsId, setProjectSettingsId] = useState('');
         const [assetPreviewId, setAssetPreviewId] = useState('');
         const [previewReloadKey, setPreviewReloadKey] = useState(0);
+        const [previewRefreshing, setPreviewRefreshing] = useState(false);
         const [loggingOut, setLoggingOut] = useState(false);
         const [authOpen, setAuthOpen] = useState(false);
         const [authReady, setAuthReady] = useState(false);
@@ -366,7 +367,7 @@ window.__ModuleLoader__.load({
                 isCurrentProject ? h('span', { style: styles.currentBadge }, t('currentProject')) : null,
                 h('span', { style: styles.groupMeta }, group.episodeCount > group.runs.length ? `${group.runs.length}/${group.episodeCount} 集` : `${group.runs.length} 集`),
                 h('span', { style: { flex: 1 } }),
-                group.projectId ? h('button', { type: 'button', style: { ...styles.projectLinkButton, marginRight: '10px' }, onClick: (event) => { event.stopPropagation(); setPreviewReloadKey(0); setAssetPreviewId(group.projectId); } }, t('previewAssets')) : null,
+                group.projectId ? h('button', { type: 'button', style: { ...styles.projectLinkButton, marginRight: '10px' }, onClick: (event) => { event.stopPropagation(); setPreviewReloadKey(0); setPreviewRefreshing(false); setAssetPreviewId(group.projectId); } }, t('previewAssets')) : null,
                 group.projectId ? h('button', { type: 'button', style: styles.projectLinkButton, onClick: (event) => { event.stopPropagation(); setProjectSettingsId(group.projectId); } }, t('projectSettings')) : null,
               );
               const rows = group.runs.map((run) => {
@@ -476,21 +477,27 @@ window.__ModuleLoader__.load({
                     : h('button', {
                         type: 'button',
                         style: styles.button,
-                        onClick: () => setPreviewReloadKey(Date.now()),
-                      }, t('refreshPreview')),
+                        disabled: previewRefreshing,
+                        onClick: () => {
+                          setPreviewRefreshing(true);
+                          setPreviewReloadKey(Date.now());
+                        },
+                      }, previewRefreshing ? t('refreshing') : t('refreshPreview')),
                   h('button', {
                     type: 'button',
                     style: styles.button,
-                    onClick: () => { setProjectSettingsId(''); setAssetPreviewId(''); setPreviewReloadKey(0); },
+                    onClick: () => { setProjectSettingsId(''); setAssetPreviewId(''); setPreviewReloadKey(0); setPreviewRefreshing(false); },
                   }, t('close')),
                 ),
               ),
               h('iframe', {
+                key: embedKind === 'settings' ? 'project-settings' : `asset-preview-${previewReloadKey}`,
                 ref: embedKind === 'settings' ? projectSettingsFrame : null,
                 title: embedKind === 'settings' ? t('projectSettings') : t('previewAssets'),
                 src: embedKind === 'settings'
                   ? `/plugins/myreels-studio/project-settings?projectId=${encodeURIComponent(embedProjectId)}&embed=1`
                   : `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(embedProjectId)}&embed=1${previewReloadKey ? `&generate=1&_=${previewReloadKey}` : ''}`,
+                onLoad: embedKind === 'preview' ? () => setPreviewRefreshing(false) : undefined,
                 style: styles.projectEmbedFrame,
               }),
             )
