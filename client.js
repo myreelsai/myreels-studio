@@ -79,9 +79,7 @@ window.__ModuleLoader__.load({
               if (!shouldRetryPoints) pointsRetryRef.current = 0;
               setData((prev) => {
                 const keepPrevious = shouldRetryPoints
-                  && pointsRetryRef.current < 2
-                  && Number.isFinite(prev.pointsBalance)
-                  && prev.pointsBalance > 0;
+                  && pointsRetryRef.current < 2;
                 return {
                   loading: false,
                   error: '',
@@ -89,7 +87,9 @@ window.__ModuleLoader__.load({
                   projects: Array.isArray(json?.projects) ? json.projects : [],
                   auth: json?.auth || null,
                   profile: json?.profile || null,
-                  pointsBalance: keepPrevious ? prev.pointsBalance : (nextPoints ?? prev.pointsBalance),
+                  pointsBalance: keepPrevious
+                    ? (Number.isFinite(prev.pointsBalance) ? prev.pointsBalance : null)
+                    : (nextPoints ?? prev.pointsBalance),
                   webBaseUrl: String(json?.webBaseUrl || ''),
                   autonomy: json?.autonomy || null,
                 };
