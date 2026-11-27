@@ -53,6 +53,7 @@ window.__ModuleLoader__.load({
         const detailSeq = useRef(0);
         const expandedInit = useRef(false);
         const projectSettingsFrame = useRef(null);
+        const previewFrame = useRef(null);
         useEffect(() => {
           if (expandedInit.current || !data.runs.length) return;
           expandedInit.current = true;
@@ -289,7 +290,9 @@ window.__ModuleLoader__.load({
                   'aria-expanded': autonomyOpen,
                 }, `${t('autonomy')} ${autonomyOpen ? '▴' : '▾'}`)
               : null,
-            h('button', { type: 'button', style: styles.button, onClick: load, disabled: Boolean(data.loading) }, data.loading ? t('refreshing') : t('refresh')),
+            projectSettingsId || assetPreviewId
+              ? null
+              : h('button', { type: 'button', style: styles.button, onClick: load, disabled: Boolean(data.loading) }, data.loading ? t('refreshing') : t('refresh')),
             loggedOut && !authPending
               ? h('button', { type: 'button', style: styles.button, onClick: loginAgain }, t('loginAgain'))
               : h('button', { type: 'button', style: styles.dangerButton, onClick: logout, disabled: loggingOut }, loggingOut ? t('loggingOut') : t('logout')),
@@ -470,7 +473,11 @@ window.__ModuleLoader__.load({
                           '*'
                         ),
                       }, t('save'))
-                    : null,
+                    : h('button', {
+                        type: 'button',
+                        style: styles.button,
+                        onClick: () => previewFrame.current?.contentWindow?.location.reload(),
+                      }, t('refreshPreview')),
                   h('button', {
                     type: 'button',
                     style: styles.button,
@@ -479,7 +486,7 @@ window.__ModuleLoader__.load({
                 ),
               ),
               h('iframe', {
-                ref: embedKind === 'settings' ? projectSettingsFrame : null,
+                ref: embedKind === 'settings' ? projectSettingsFrame : previewFrame,
                 title: embedKind === 'settings' ? t('projectSettings') : t('previewAssets'),
                 src: embedKind === 'settings'
                   ? `/plugins/myreels-studio/project-settings?projectId=${encodeURIComponent(embedProjectId)}&embed=1`
@@ -638,7 +645,8 @@ window.__ModuleLoader__.load({
           loggedOutHint: 'Plugin login state is cleared. Project files were not deleted.',
           loginAgain: 'Log in again',
           pointsUnit: 'pts',
-          refresh: 'Refresh',
+          refresh: 'Refresh tasks',
+          refreshPreview: 'Refresh asset preview',
           refreshing: 'Refreshing…',
           loading: 'Loading runs...',
           loadFailed: 'Failed to load runs',
@@ -703,7 +711,8 @@ window.__ModuleLoader__.load({
           loggedOutHint: '插件登录态已清除，项目文件未删除。',
           loginAgain: '重新登录',
           pointsUnit: '点',
-          refresh: '刷新',
+          refresh: '刷新任务',
+          refreshPreview: '刷新资产预览',
           refreshing: '刷新中…',
           loading: '正在读取 run...',
           loadFailed: '读取失败',
