@@ -57,6 +57,7 @@ window.__ModuleLoader__.load({
         const pointsRetryRef = useRef(0);
         const expandedInit = useRef(false);
         const projectSettingsFrame = useRef(null);
+        const previewFrame = useRef(null);
         useEffect(() => {
           if (expandedInit.current || !data.runs.length) return;
           expandedInit.current = true;
@@ -101,16 +102,26 @@ window.__ModuleLoader__.load({
             })
             .catch((err) => setData((prev) => ({ ...prev, loading: false, error: String(err?.message || err), runs: [], projects: [], auth: null, profile: null, autonomy: null })));
         };
+        // 预览是单页双 tab（资产 / 分镜），刷新只重建当前 tab，并保持选中状态。
+        const currentPreviewTab = () => {
+          try {
+            const hash = String(previewFrame.current?.contentWindow?.location?.hash || '').toLowerCase();
+            return hash.includes('shots') ? 'shots' : 'assets';
+          } catch {
+            return 'assets';
+          }
+        };
         const refreshAssetPreview = async () => {
           if (!assetPreviewId || previewRefreshing) return;
+          const tab = currentPreviewTab();
           setPreviewRefreshing(true);
           setPreviewError('');
           try {
-            const url = `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(assetPreviewId)}&embed=1&generate=1&_=${Date.now()}`;
+            const url = `/plugins/myreels-studio/project-preview?projectId=${encodeURIComponent(assetPreviewId)}&embed=1&generate=1&tab=${tab}&_=${Date.now()}`;
             const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const finalUrl = new URL(res.url || url, window.location.href);
-            setPreviewSrc(`${finalUrl.pathname}${finalUrl.search}`);
+            setPreviewSrc(`${finalUrl.pathname}${finalUrl.search}#${tab}`);
           } catch (error) {
             setPreviewError(String(error?.message || error));
           } finally {
@@ -543,7 +554,7 @@ window.__ModuleLoader__.load({
               ),
               h('div', { style: { position: 'relative' } },
                 h('iframe', {
-                  ref: embedKind === 'settings' ? projectSettingsFrame : null,
+                  ref: embedKind === 'settings' ? projectSettingsFrame : previewFrame,
                   title: embedKind === 'settings' ? t('projectSettings') : t('previewAssets'),
                   src: embedKind === 'settings'
                     ? `/plugins/myreels-studio/project-settings?projectId=${encodeURIComponent(embedProjectId)}&embed=1`
