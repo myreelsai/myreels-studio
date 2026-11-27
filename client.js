@@ -337,15 +337,19 @@ window.__ModuleLoader__.load({
                   'aria-expanded': autonomyOpen,
                 }, `${t('autonomy')} ${autonomyOpen ? '▴' : '▾'}`)
               : null,
-            projectSettingsId || assetPreviewId
-              ? null
-              : h('button', { type: 'button', style: styles.button, onClick: load, disabled: Boolean(data.loading) }, data.loading ? t('refreshing') : t('refresh')),
             loggedOut && !authPending
               ? h('button', { type: 'button', style: styles.button, onClick: loginAgain }, t('loginAgain'))
               : h('button', { type: 'button', style: styles.dangerButton, onClick: logout, disabled: loggingOut }, loggingOut ? t('loggingOut') : t('logout')),
           ),
         );
 
+        const refreshTasksButton = h('button', {
+          type: 'button',
+          style: styles.button,
+          onClick: load,
+          disabled: Boolean(data.loading),
+        }, data.loading ? t('refreshing') : t('refresh'));
+        const tasksToolbar = h('div', { style: styles.listToolbar }, refreshTasksButton);
         let body;
         if (authPending) {
           body = h('div', { style: styles.muted }, t('loading'));
@@ -357,9 +361,9 @@ window.__ModuleLoader__.load({
         } else if (data.loading && !data.runs.length) {
           body = h('div', { style: styles.muted }, t('loading'));
         } else if (data.error) {
-          body = h('div', { style: styles.error }, `${t('loadFailed')}: ${data.error}`);
+          body = h('div', null, tasksToolbar, h('div', { style: styles.error }, `${t('loadFailed')}: ${data.error}`));
         } else if (!data.runs.length && !(data.projects || []).length) {
-          body = h('div', { style: styles.empty }, t('empty'));
+          body = h('div', null, tasksToolbar, h('div', { style: styles.empty }, t('empty')));
         } else {
           const groups = [];
           const byProject = new Map();
@@ -388,7 +392,7 @@ window.__ModuleLoader__.load({
             || groups.find((g) => g.key === expandedProjectId)?.projectId
             || groups[0]?.projectId
             || '';
-          body = h('div', { style: styles.table }, [
+          body = h('div', null, tasksToolbar, h('div', { style: styles.table }, [
             h('div', { key: 'head', style: styles.rowHead },
               h('span', { style: styles.colEpisode }, t('colEpisode')),
               h('span', { style: styles.colStage }, t('colStage')),
@@ -448,7 +452,7 @@ window.__ModuleLoader__.load({
               });
               return isExpanded ? [head, ...rows] : [head];
             }),
-          ]);
+          ]));
         }
 
         const detailRow = (key, value) => h('div', { key, style: styles.detailRow },
@@ -844,7 +848,8 @@ window.__ModuleLoader__.load({
           autonomyText: { display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 },
           autonomyLabel: { fontSize: '13px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' },
           autonomyDesc: { fontSize: '11px', lineHeight: 1.45, color: 'var(--dsw-alias-label-secondary)' },
-          table: { border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '12px', overflow: 'hidden', background: 'var(--dsw-alias-bg-layer-1)' },
+          listToolbar: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '8px' },
+        table: { border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '12px', overflow: 'hidden', background: 'var(--dsw-alias-bg-layer-1)' },
           rowHead: { display: 'grid', gridTemplateColumns: '90px 1fr 180px 70px', gap: '12px', padding: '10px 16px', fontSize: '12px', color: 'var(--dsw-alias-label-secondary)', borderBottom: '1px solid var(--dsw-alias-border-l1)', background: 'var(--dsw-alias-bg-layer-2)' },
           row: { display: 'grid', gridTemplateColumns: '90px 1fr 180px 70px', gap: '12px', padding: '12px 16px', fontSize: '13px', alignItems: 'center', borderBottom: '1px solid var(--dsw-alias-border-l1)' },
           episodeRow: { display: 'grid', gridTemplateColumns: '90px 1fr 180px 70px', gap: '12px', padding: '10px 16px', fontSize: '13px', alignItems: 'center', borderBottom: '1px solid var(--dsw-alias-border-l1)' },
