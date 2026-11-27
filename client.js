@@ -568,6 +568,7 @@ window.__ModuleLoader__.load({
                         textAlign: 'center',
                       },
                     },
+                      h('style', null, '@keyframes myreels-spin{to{transform:rotate(360deg)}}'),
                       previewRefreshing ? h('div', { style: styles.loadingSpinner }) : null,
                       h('div', null, previewError || t('refreshing')),
                     )
